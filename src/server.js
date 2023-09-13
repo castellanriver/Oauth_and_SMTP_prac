@@ -3,6 +3,11 @@ const { default: mongoose } = require('mongoose');
 const app = express();
 const path = require('path');
 const User = require('./models/users.model');
+const passport = require('passport');
+
+app.use(passport.initialize());
+app.use(passport.session());
+require('./config/passport');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -25,6 +30,25 @@ app.use('/static', express.static(path.join(__dirname, '../public')));
 
 app.get('/login', (req, res) => {
   res.render('login');
+})
+
+// Passport
+
+app.post('/login', (req, res) => {
+  passport.authenticate('local', (err, user, info) => {
+    if(err) {
+      return next(err);
+    }
+
+    if(!user) {
+      return res.json({ msg: info});
+    }
+
+    req.logIn(user,function (err) {
+      if(err) { return next(err); }
+      res.redirect('/')
+    })
+  })
 })
 
 app.get('/signup', (req, res) => {
